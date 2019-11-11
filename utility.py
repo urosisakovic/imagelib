@@ -9,7 +9,9 @@ def rgb_to_grayscale(rgb_image):
 
 def load_image(image_path, grayscale=None):
     image = Image.open(image_path)
-    image = np.array(image)
+    image = np.array(image, dtype=np.float32)
+
+    image /= 255.
 
     if grayscale is None:
         return image
@@ -23,6 +25,7 @@ def load_image(image_path, grayscale=None):
         return image
 
 def save_image(image_path, image):
+    image = ((image - image.min()) / (image.max() - image.min())) * 255.
     image = Image.fromarray(image.astype(np.uint8))
     image.save(image_path)
 
