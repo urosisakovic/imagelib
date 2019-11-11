@@ -7,18 +7,38 @@ def rgb_to_grayscale(rgb_image):
     grayscale_image = np.dot(rgb_image, conversion_ratio)
     return grayscale_image
 
-def load_image(image_path):
+def load_image(image_path, grayscale=None):
     image = Image.open(image_path)
     image = np.array(image)
-    return image
+
+    if grayscale is None:
+        return image
+    elif grayscale:
+        if (len(image.shape) == 2):
+            return image
+        else:
+            return rgb_to_grayscale(image)
+    else:
+        assert len(image.shape) == 3, 'Image is saved as grayscale.'
+        return image
 
 def save_image(image_path, image):
     image = Image.fromarray(image.astype(np.uint8))
     image.save(image_path)
 
 def apply_kernel(image, kernel):
-    h, w, c = image.shape
+    grayscale = len(image.shape) == 2
+
+    if grayscale:
+        h, w = image.shape
+        image = np.expand_dims(image, -1)
+        c = 1
+    else:
+        h, w, c = image.shape
+
     kernel_size = kernel.shape[0]
+    if (len(kernel.shape) == 2):
+        kernel = np.expand_dims(kernel, -1)
 
     padding_size = (kernel_size - 1) // 2
     padded_image = np.zeros([h + 2*padding_size, w + 2*padding_size, c])
@@ -33,4 +53,5 @@ def apply_kernel(image, kernel):
                                                padded_image[i : 2*padding_size+i+1, j : 2*padding_size+j+1, k]
                                             )
 
+    processed_image = np.squeeze(processed_image, -1)
     return processed_image
