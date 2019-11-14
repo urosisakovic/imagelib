@@ -43,8 +43,6 @@ def imresize(img, height, width, interpolation='nn'):
 
     resized_image = resized_image.reshape((height, width))
 
-    return resized_image
-    
     if interpolation == 'nn':
         pass
 
@@ -54,7 +52,8 @@ def imresize(img, height, width, interpolation='nn'):
     elif interpolation == 'bicubic':
         pass
 
-    return resized_image_indices
+    return resized_image
+
 
 if __name__ == '__main__':
     img = utility.load_image('/home/uros/Desktop/small_img.jpg', grayscale=True)
