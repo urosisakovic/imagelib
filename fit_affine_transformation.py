@@ -1,1 +1,0 @@
-# given two sets of point, find affine transformation that gets you from one to the other
