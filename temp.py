@@ -1,16 +1,7 @@
-import utility
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import numpy as np
 
-image_path = '/home/uros/Desktop/cat.jpg'
-grayscale_path = '/home/uros/Desktop/grayscale_cat.jpg'
-    
-rgb_image = utility.load_image(image_path)
-
-grayscale_image = utility.rgb_to_grayscale(rgb_image)
-
-print(grayscale_image.shape)
-
-utility.save_image(grayscale_path, grayscale_image)
-
-img = utility.load_image(grayscale_path)
-
-print(img.shape)
+x = np.linspace(0, 20, 100)
+plt.plot(x, np.sin(x))
+plt.savefig('/home/uros/Desktop/plt.png') 

@@ -1,5 +1,7 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
+import os
 
 
 def rgb_to_grayscale(rgb_image):
@@ -10,6 +12,10 @@ def rgb_to_grayscale(rgb_image):
 def load_image(image_path, grayscale=None):
     image = Image.open(image_path)
     image = np.array(image, dtype=np.float32)
+
+    # drop 4th dimension (screenshots...)
+    if (len(image.shape) == 3) and (image.shape[-1] == 4):
+        image = image[:, :, :3]
 
     image /= 255.
 
@@ -58,3 +64,15 @@ def apply_kernel(image, kernel):
 
     processed_image = np.squeeze(processed_image, -1)
     return processed_image
+
+def save_plot(plt, dir):
+    i = 0
+    filename_candidat = None
+    
+    while True:
+        filename_candidat = os.path.join(dir, 'plot{}.png'.format(i))
+        if not os.path.exists(filename_candidat):
+            break
+        i += 1
+
+    plt.savefig(filename_candidat)
