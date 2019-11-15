@@ -99,8 +99,60 @@ def imresize(img, height, width, inter='nn'):
 
     return resized_image
 
-def imaffine():
-    pass
+def imaffine(img, transformation, inter='nn'):
+    assert transformation.shape == [2, 3], 'imagelib.imaffine: Invalid transformation matrix'
+    assert inter in ['nn', 'bilinear', 'bicubic'], 'imagelib.imaffine: Invalid interpolation type'
+
+    affine_A = transformation[:, :2]
+    affine_b = transformation[:, 3]
+
+    img_h, img_w = img.shape
+
+    A = np.array([0, 0], dtype=np.float32).reshape((2, 1))
+    B = np.array([img_h, 0], dtype=np.float32).reshape((2, 1))
+    C = np.array([img_h, img_w], dtype=np.float32).reshape((2, 1))
+    D = np.array([0, img_w], dtype=np.float32).reshape((2, 1))
+
+    proj_A = affine_A @ A + affine_b
+    proj_B = affine_A @ B + affine_b
+    proj_C = affine_A @ C + affine_b
+    proj_D = affine_A @ D + affine_b
+
+    x_min = min([proj_A[0, :], proj_B[0, :], proj_C[0, :], proj_D[0, :]])
+    x_max = max([proj_A[0, :], proj_B[0, :], proj_C[0, :], proj_D[0, :]])
+    
+    y_min = min([proj_A[1, :], proj_B[1, :], proj_C[1, :], proj_D[1, :]])
+    y_max = max([proj_A[1, :], proj_B[1, :], proj_C[1, :], proj_D[1, :]])
+
+    new_img_h = y_max - y_min
+    new_img_w = x_max - x_min
+
+    new_img = np.zeros([new_img_h, new_img_w])
+
+    new_img_coords_x, new_img_coords_y = np.meshgrid(np.arange(new_img_w), np.arange(new_img_h))
+    new_img_coords = np.stack([new_img_coords_x, new_img_coords_y], axis=-1).reshape(-1, 2)
+
+    inv_affine_A = np.linalg.inv(affine_A)
+    inv_affine_B = -inv_affine_A @ affine_b
+
+    projected_new_coords = inv_affine_A @ new_img_coords + inv_affine_B
+    
+    old_img_coords_x, old_img_coords_y = np.meshgrid(np.arange(img_w), np.arange(img_h))
+    old_img_coords = np.stack([old_img_coords_x, old_img_coords_y], axis=-1).reshape(-1, 2)
+
+    if inter == 'nn':
+        for proj_coord, coord in zip(projected_new_coords, new_img_coords):
+            differences = old_img_coords - proj_coord
+            closest_point = np.argmin(differences)
+            new_img[coord.astype(np.int32)] = img[closest_point.astype(np.int32)]
+
+    elif inter == 'bilinear':
+        pass
+
+    elif inter == 'bicubic':
+        pass
+
+    return new_img
 
 def filter2(img, filt):
     """
