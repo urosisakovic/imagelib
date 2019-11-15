@@ -20,7 +20,7 @@ def rgb2gray(rgb, conv_ratio=None):
 
 def imblur_mean(img, filt_shape):
     filt = mean_blur_filter(filt_shape)
-    return filter(img, filt)
+    return filter2(img, filt)
 
 def imblur_gaussian():
     pass
@@ -81,44 +81,43 @@ def imresize(img, height, width, inter='nn'):
 def imaffine():
     pass
 
-def filter(img, filt):
-    grayscale = len(img.shape) == 2
+def filter2(img, filt):
+    """
+    img(numpy.ndarray): grayscale image
+    filt(numpy.ndarray): 2D filter
+    """ 
+    assert len(img.shape) == 2, 'imagelib.filter2: Invalid image format'
+    assert len(filt.shape) == 2, 'imagelib.filter2: Invalid filter format'
+    assert np.prod(filt.shape) % 2 == 1, 'imagelib.filter2: Invalid filter format'
 
-    if grayscale:
-        h, w = image.shape
-        image = np.expand_dims(image, -1)
-        c = 1
-    else:
-        h, w, c = image.shape
+    img_h, img_w = img.shape
+    filt_h, filt_w = filt.shape
 
-    kernel_size = filt.shape[0]
-    if (len(kernel.shape) == 2):
-        kernel = np.expand_dims(kernel, -1)
+    padding_w = (filt_w - 1) // 2
+    padding_h = (filt_h - 1) // 2
 
-    padding_size = (kernel_size - 1) // 2
-    padded_image = np.zeros([h + 2*padding_size, w + 2*padding_size, c])
-    padded_image[padding_size:-padding_size, padding_size:-padding_size, :] = image
+    vertical_padding = np.zeros((img_h, padding_w))
+    horizontal_padding = np.zeros((padding_h, img_w + 2 * padding_w))
 
-    processed_image = np.zeros(image.shape)
+    padded_img = np.concatenate([vertical_padding, img, vertical_padding], axis=-1)
+    padded_img = np.concatenate([horizontal_padding, padded_img, horizontal_padding], axis=0)
 
-    for i in range(h):
-        for j in range(w):
-            for k in range(c):
-                processed_image[i, j, k] = np.mean(kernel[:, :, k] * 
-                                               padded_image[i : 2*padding_size+i+1, j : 2*padding_size+j+1, k]
-                                            )
+    filtered_image = np.zeros(img.shape)
 
-    processed_image = np.squeeze(processed_image, -1)
-    return processed_image
+    for i in range(img_h):
+        for j in range(img_w):
+            filtered_image[i, j] = np.sum(filt * padded_img[i : 2*vertical_padding+i+1, j : 2*horizontal_padding+j+1])
+
+    return filtered_image
 
 def sobel_edge_det(img, blur_filt_shape):
     img = imblur_mean(img, blur_filt_shape)
 
     filt_ver = sobel_filter('ver')
-    edges_ver = filter(img, filt_ver)
+    edges_ver = filter2(img, filt_ver)
 
     filt_hor = sobel_filter('hor')
-    edges_hor = filter(img, filt_hor)
+    edges_hor = filter2(img, filt_hor)
 
     edges_img = np.sqrt(edges_ver**2 + edges_hor**2)
     edges_dir = np.arctan(edges_hor / edges_ver)
