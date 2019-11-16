@@ -113,10 +113,10 @@ def imaffine(img, transformation, inter='nn'):
     img_h, img_w = img.shape
 
     # corners of the image
-    A = np.array([0, 0], dtype=np.float32).reshape((2, 1))
-    B = np.array([img_h, 0], dtype=np.float32).reshape((2, 1))
-    C = np.array([img_h, img_w], dtype=np.float32).reshape((2, 1))
-    D = np.array([0, img_w], dtype=np.float32).reshape((2, 1))
+    A = np.array([-img_w/2, img_h/2], dtype=np.float32).reshape((2, 1))
+    B = np.array([-img_w/2, -img_h/2], dtype=np.float32).reshape((2, 1))
+    C = np.array([img_w/2, -img_h/2], dtype=np.float32).reshape((2, 1))
+    D = np.array([img_w/2, img_h/2], dtype=np.float32).reshape((2, 1))
 
     # corners of the transformed image
     proj_A = affine_A @ A + affine_b
@@ -134,18 +134,13 @@ def imaffine(img, transformation, inter='nn'):
     new_img_h = np.int32(y_max - y_min)
     new_img_w = np.int32(x_max - x_min)
 
-    print(new_img_h, '  ', new_img_w)
-    # quit()
-
     new_img = np.zeros([new_img_h, new_img_w])
 
     # coordinates of points in new image
     new_img_coords_y, new_img_coords_x = np.meshgrid(np.arange(new_img_w, dtype=np.float32), np.arange(new_img_h, dtype=np.float32))
     new_img_coords = np.stack([new_img_coords_x, new_img_coords_y], axis=-1)    # GOOD!
-
     new_img_coords = new_img_coords.reshape((-1, 2))
     new_img_coords = np.transpose(new_img_coords)   
-
 
     image_coord_sys_new_img_coords = new_img_coords[:, :]
     new_img_coords +=  0.5
@@ -153,7 +148,7 @@ def imaffine(img, transformation, inter='nn'):
     # transfer those coordinates from image coordinate system to eucleadean coordinate system
     rot_mat = np.array([[ 0, 1], 
                         [-1, 0]], dtype=np.float32)
-    trans_vect = np.array([-new_img_w/2, -new_img_h/2], dtype=np.float32).reshape((2, 1))
+    trans_vect = np.array([-new_img_w/2, new_img_h/2], dtype=np.float32).reshape((2, 1))
 
     new_img_coords = rot_mat @ new_img_coords + trans_vect
 
@@ -165,16 +160,18 @@ def imaffine(img, transformation, inter='nn'):
     projected_new_coords = inv_affine_A @ new_img_coords + inv_affine_b
 
     # transfer those coordinates to image coordinate system of original image
-    trans_vect = np.array([img_w/2, img_h/2], dtype=np.float32).reshape((2, 1))
+    trans_vect = np.array([img_w/2, -img_h/2], dtype=np.float32).reshape((2, 1))
     rot_mat = np.array([[0, -1], 
                         [1,  0]], dtype=np.float32)
 
     projected_new_coords = rot_mat @ (projected_new_coords + trans_vect)
     
     # coordinates of points in old image
-    old_img_coords_x, old_img_coords_y = np.meshgrid(np.arange(img_w, dtype=np.float32), np.arange(img_h, dtype=np.float32))
-    old_img_coords = np.transpose(np.stack([old_img_coords_x, old_img_coords_y], axis=-1).reshape(-1, 2))
-    old_img_coords +=  0.5
+    old_img_coords_y, old_img_coords_x = np.meshgrid(np.arange(img_w, dtype=np.float32), np.arange(img_h, dtype=np.float32))
+    old_img_coords = np.stack([old_img_coords_x, old_img_coords_y], axis=-1)    # GOOD!
+    old_img_coords = old_img_coords.reshape((-1, 2))
+    old_img_coords = np.transpose(old_img_coords)  
+    old_img_coords +=  0.5 
 
     projected_new_coords = np.transpose(projected_new_coords)
     new_img_coords = np.transpose(new_img_coords)
@@ -183,8 +180,6 @@ def imaffine(img, transformation, inter='nn'):
 
     if inter == 'nn':
         for idx, (proj_coord, coord) in enumerate(zip(projected_new_coords, image_coord_sys_new_img_coords)):
-
-            print(idx)
 
             if proj_coord[0] < 0 or proj_coord[0] > img_h or\
                 proj_coord[1] < 0 or proj_coord[1] > img_w:
