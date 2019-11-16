@@ -55,54 +55,28 @@ def imresize(img, height, width, inter='nn'):
     # extract old image dimensions
     h, w = img.shape
 
-    x_ratio = height / h
-    y_ratio = width / h
+    y_ratio = height / h
+    x_ratio = width / w
 
-    resized_row_indices = np.arange(height).reshape((height, 1)) * np.ones((height, width))         # [height, width]
-    resized_column_indices = np.transpose(np.arange(width).reshape((width, 1)) * np.ones((width, height)))  # [height, width]
+    affine_A = np.array([[x_ratio, 0      ],
+                         [0,       y_ratio]])
+    affine_b = np.zeros((2, 1))
+    affine_transform = np.concatenate([affine_A, affine_b], axis=1)
 
-    resized_image_indices = np.stack([resized_row_indices, resized_column_indices], axis=-1)    # [height, width, 2]
-    resized_image_indices = resized_image_indices.reshape((-1, 2))              # [height * width, 2]
+    return imaffine(img, affine_transform, inter)
 
-    inverse_transformation = np.array([[1 / x_ratio, 0],
-                                       [0, 1 / y_ratio]])       # [2, 2]
+def imrotate(img, angle, inter='nn', fill=0):
+    cos = np.cos(angle)
+    sin = np.sin(angle)
 
-    projected_pixel_positions = resized_image_indices @ inverse_transformation  #[height * width, 2]
+    affine_A = np.array([[cos, -sin],
+                         [sin,  cos]])
+    affine_b = np.zeros((2, 1))
+    affine_transform = np.concatenate([affine_A, affine_b], axis=1)
 
+    return imaffine(img, affine_transform, inter, fill)
 
-    original_row_indices = np.arange(h).reshape((h, 1)) * np.ones((h, w))         # [h, w]
-    original_column_indices = np.transpose(np.arange(w).reshape((w, 1)) * np.ones((w, h)))  # [h, w]
-
-    original_image_indices = np.stack([original_row_indices, original_column_indices], axis=-1)    # [h, w, 2]
-    original_image_indices = original_image_indices.reshape((-1, 2))              # [h * w, 2]
-
-    axis_difference = np.expand_dims(original_image_indices, 0) - np.expand_dims(projected_pixel_positions, 1) # [height * width, h * w, 2]
-
-    eucleadean_difference = np.sqrt(axis_difference[:, :, 0]**2 + axis_difference[:, :, 1]**2)  # [height * width, h * w]
-
-    closest_points = np.argmin(eucleadean_difference, axis=-1)  # [height * width]
-
-    wanted_indices = original_image_indices[closest_points.astype(np.int32)].astype(np.int32)  # [height * width, 2]
-
-    resized_image = img[wanted_indices[:, 0], wanted_indices[:, 1]]
-
-    resized_image = resized_image.reshape((height, width))
-
-    if inter == 'nn':
-        pass
-
-    elif inter == 'bilinear':
-        pass
-
-    elif inter == 'bicubic':
-        pass
-
-    return resized_image
-
-def imrotate():
-    pass
-
-def imaffine(img, transformation, inter='nn'):
+def imaffine(img, transformation, inter='nn', fill=0):
     assert transformation.shape == (2, 3), 'imagelib.imaffine: Invalid transformation matrix'
     assert inter in ['nn', 'bilinear', 'bicubic'], 'imagelib.imaffine: Invalid interpolation type'
 
@@ -185,7 +159,7 @@ def imaffine(img, transformation, inter='nn'):
                 proj_coord[1] < 0 or proj_coord[1] > img_w:
 
                 coord = coord.astype(np.int32)
-                new_img[coord[0], coord[1]] = 255
+                new_img[coord[0], coord[1]] = fill
                 continue
 
             axis_differences = old_img_coords - proj_coord
