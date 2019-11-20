@@ -5,13 +5,15 @@ def imsharpen():
     pass
 
 def sobel_filter(type):
-    filter = np.array([[1, 0, -1],
-                       [2, 0, -2],
-                       [1, 0, -1]])
+    assert type in ['ver', 'hor'], 'imagelib.sobel_filter: Invalid filter type'
     if type == 'ver':
-        return filter
+        return np.array([[-1, 0, 1],
+                         [-2, 0, 2],
+                         [-1, 0, 1]])
     elif type == 'hor':
-        return np.transpose(filter)
+        return np.array([[1, 2, 1],
+                         [0, 0, 0],
+                         [-1, -2, -1]])
         
 
 def laplassian_filter():
@@ -35,8 +37,6 @@ def imblur_gaussian():
 
 def imblur_median():
     pass
-
-
 
 def filter2(img, filt):
     """
@@ -63,7 +63,7 @@ def filter2(img, filt):
 
     for i in range(img_h):
         for j in range(img_w):
-            filtered_image[i, j] = np.sum(filt * padded_img[i : 2*vertical_padding+i+1, j : 2*horizontal_padding+j+1])
+            filtered_image[i, j] = np.sum(filt * padded_img[i : 2*padding_h+i+1, j : 2*padding_w+j+1])
 
     return filtered_image
 
@@ -77,58 +77,50 @@ def sobel_edge_det(img, blur_filt_shape):
     edges_hor = filter2(img, filt_hor)
 
     edges_img = np.sqrt(edges_ver**2 + edges_hor**2)
+    edges_img = edges_img / np.max(edges_img) * 255.
     edges_dir = np.arctan(edges_hor / edges_ver)
 
     return edges_img, edges_dir
 
-def main_edges(sobel_edges_image, sobel_edges_directions):
-    h, w = sobel_edges_image.shape
+def non_max_supression(edges, gradient):
+    h, w = edges.shape
+        
+    Z = np.zeros(edges.shape)
 
-    strong_edges_image = np.zeros(sobel_edges_image.shape)
-
-    dir = None
     for i in range(1, h - 1):
         for j in range(1, w - 1):
-            if 3*np.pi/8 <= sobel_edges_directions[i][j] < np.pi/2 or\
-               -3*np.pi/8 <= sobel_edges_directions[i][j] < -np.pi/8:
-                dir = 1
-            elif np.pi/8 <= sobel_edges_directions[i][j] < 3*np.pi/8:
-                dir = 2
-            elif -np.pi/8 <= sobel_edges_directions[i][j] < np.pi/8:
-                dir = 3
-            else:
-                dir = 4
+            p, q = 255, 255
 
-            if dir == 1:
-                if sobel_edges_directions[i][j] > sobel_edges_directions[i][j - 1] and\
-                    sobel_edges_directions[i][j] > sobel_edges_directions[i][j + 1]:
-                    strong_edges_image[i][j] = sobel_edges_image[i][j]
-            elif dir == 2:
-                if sobel_edges_directions[i][j] > sobel_edges_directions[i - 1][j - 1] and\
-                    sobel_edges_directions[i][j] > sobel_edges_directions[i + 1][j + 1]:
-                    strong_edges_image[i][j] = sobel_edges_image[i][j]
-            elif dir == 3:
-                if sobel_edges_directions[i][j] > sobel_edges_directions[i - 1][j] and\
-                    sobel_edges_directions[i][j] > sobel_edges_directions[i + 1][j]:
-                    strong_edges_image[i][j] = sobel_edges_image[i][j]
-            else:
-                if sobel_edges_directions[i][j] > sobel_edges_directions[i - 1][j + 1] and\
-                    sobel_edges_directions[i][j] > sobel_edges_directions[i + 1][j - 1]:
-                    strong_edges_image[i][j] = sobel_edges_image[i][j]
+            if 3*np.pi/8 <= gradient[i][j] <= np.pi/2 or\
+                -np.pi/2 <= gradient[i][j] < -3*np.pi/8:
+                p = edges[i, j-1]
+                q = edges[i, j+1]
+            elif np.pi/8 <= gradient[i][j] < 3*np.pi/8:
+                p = edges[i-1, j+1]
+                q = edges[i+1, j-1]
+            elif -np.pi/8 <= gradient[i][j] < np.pi/8:
+                p = edges[i, j-1]
+                q = edges[i, j+1]
+            elif -3*np.pi/8 <= gradient[i][j] < -np.pi/8:
+                p = edges[i-1, j-1]
+                q = edges[i+1, j+1]
 
-    return strong_edges_image
+            if edges[i, j] >= p and edges[i, j] >= q:
+                Z[i, j] = edges[i, j]
 
-def dual_threshold(strong_edges_image, high_thresh, low_thresh):
-    strong_edges_image[strong_edges_image < low_thresh] = 0.
+    return Z
 
-    thresholded_image = np.zeros(strong_edges_image.shape)
+def dual_threshold(edges, high, low):
+    edges[edges < low] = 0.
+    edges[edges >= high] = high
 
-    thresholded_image[strong_edges_image > high_thresh] = 1.
+    threshold = np.zeros(edges.shape)
+    threshold[edges > high] = 1.
 
-    h, w = strong_edges_image.shape
+    h, w = edges.shape
 
     def dfs(i, j):
-        thresholded_image[i][j] = 1.
+        threshold[i][j] = 1.
 
         stack = []
         stack.append((i, j))
@@ -137,7 +129,7 @@ def dual_threshold(strong_edges_image, high_thresh, low_thresh):
             u, v = stack[-1]
             stack = stack[:-1]
 
-            thresholded_image[u][v] = 1.
+            threshold[u][v] = 1.
 
             for x in range(-1, 2):
                 for y in range(-1, 2):
@@ -147,23 +139,25 @@ def dual_threshold(strong_edges_image, high_thresh, low_thresh):
                     if newU >= h or newU < 0 or newV >= w or newV < 0:
                         continue
 
-                    if thresholded_image[newU][newV] == 1:
+                    if threshold[newU][newV] == 1:
                         continue
 
-                    if low_thresh <= strong_edges_image[newU][newV] <= high_thresh:
+                    if low <= edges[newU][newV] <= high:
                         stack.append((newU, newV))
 
     for i in range(h):
         for j in range(w):
-            if thresholded_image[i][j] == 1. and low_thresh <= strong_edges_image[i][j] <= high_thresh:
+            if threshold[i, j] != 1 and edges[i, j] >= high:
                 dfs(i, j)
 
-    return strong_edges_image * thresholded_image
+    edges =  edges * threshold
+    edges[edges > 0] = 255.
+
+    return edges
 
 def canny_edge(img, blur_filt_shape, high, low):
     sobel_edges_image, sobel_edges_directions = sobel_edge_det(img, blur_filt_shape)
-
-    strong_edges_image = main_edges(sobel_edges_image, sobel_edges_directions)
+    strong_edges_image = non_max_supression(sobel_edges_image, sobel_edges_directions)
     canny_edges_image = dual_threshold(strong_edges_image, high, low)
     
     return canny_edges_image, strong_edges_image
