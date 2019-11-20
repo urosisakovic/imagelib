@@ -2,10 +2,16 @@ import numpy as np
 
 
 def imsharpen():
+    """
+    Doc string.
+    """
     pass
 
 
 def sobel_filter(type):
+    """
+    Doc string.
+    """
     assert type in ['ver', 'hor'], 'imagelib.sobel_filter: Invalid filter type'
     if type == 'ver':
         return np.array([[-1, 0, 1],
@@ -18,6 +24,9 @@ def sobel_filter(type):
         
 
 def laplassian_filter():
+    """
+    Doc string.
+    """
     filter = np.array([[ 0, -1,  0],
                        [-1,  4, -1],
                        [ 0, -1,  0]])
@@ -25,6 +34,9 @@ def laplassian_filter():
 
 
 def mean_blur_filter(filt_shape):
+    """
+    Doc string.
+    """
     return np.ones(filt_shape) / np.prod(filt_shape)
 
 
@@ -33,25 +45,31 @@ def imblur_mean(img, filt_shape):
     Mean blur of an image.
     """
     filt = mean_blur_filter(filt_shape)
-    return filter2(img, filt)
+    return convolve(img, filt)
 
 
 def imblur_gaussian():
+    """
+    Doc string.
+    """
     pass
 
 
 def imblur_median():
+    """
+    Doc string.
+    """
     pass
 
 
-def filter2(img, filt):
+def convolve(img, filt):
     """
     img(numpy.ndarray): grayscale image
     filt(numpy.ndarray): 2D filter
     """ 
-    assert len(img.shape) == 2, 'imagelib.filter2: Invalid image format'
-    assert len(filt.shape) == 2, 'imagelib.filter2: Invalid filter format'
-    assert np.prod(filt.shape) % 2 == 1, 'imagelib.filter2: Invalid filter format'
+    assert len(img.shape) == 2, 'imagelib.convolve: Invalid image format'
+    assert len(filt.shape) == 2, 'imagelib.convolve: Invalid filter format'
+    assert np.prod(filt.shape) % 2 == 1, 'imagelib.convolve: Invalid filter format'
 
     img_h, img_w = img.shape
     filt_h, filt_w = filt.shape
@@ -69,19 +87,26 @@ def filter2(img, filt):
 
     for i in range(img_h):
         for j in range(img_w):
-            filtered_image[i, j] = np.sum(filt * padded_img[i : 2*padding_h+i+1, j : 2*padding_w+j+1])
+            # image patch of size [<padding_h>, <padding_w>] centered in [i, j].
+            image_patch = padded_img[i : 2*padding_h+i+1, j : 2*padding_w+j+1]
+
+            # apply filter to the patch
+            filtered_image[i, j] = np.sum(filt * image_patch)
 
     return filtered_image
 
 
 def sobel_edge_det(img, blur_filt_shape):
+    """
+    Doc string.
+    """
     img = imblur_mean(img, blur_filt_shape)
 
     filt_ver = sobel_filter('ver')
-    edges_ver = filter2(img, filt_ver)
+    edges_ver = convolve(img, filt_ver)
 
     filt_hor = sobel_filter('hor')
-    edges_hor = filter2(img, filt_hor)
+    edges_hor = convolve(img, filt_hor)
 
     edges_img = np.sqrt(edges_ver**2 + edges_hor**2)
     edges_img = edges_img / np.max(edges_img) * 255.
@@ -91,6 +116,9 @@ def sobel_edge_det(img, blur_filt_shape):
 
 
 def non_max_supression(edges, gradient):
+    """
+    Doc string.
+    """
     h, w = edges.shape
         
     Z = np.zeros(edges.shape)
@@ -120,6 +148,9 @@ def non_max_supression(edges, gradient):
 
 
 def dual_threshold(edges, high, low):
+    """
+    Doc string.
+    """
     edges[edges < low] = 0.
     edges[edges >= high] = high
 
@@ -166,21 +197,33 @@ def dual_threshold(edges, high, low):
 
 
 def canny_edge(img, blur_filt_shape, high, low):
-    sobel_edges_image, sobel_edges_directions = sobel_edge_det(img, blur_filt_shape)
-    strong_edges_image = non_max_supression(sobel_edges_image, sobel_edges_directions)
-    canny_edges_image = dual_threshold(strong_edges_image, high, low)
+    """
+    Doc string.
+    """
+    edges, edges_dir = sobel_edge_det(img, blur_filt_shape)
+    edges = non_max_supression(edges, edges_dir)
+    canny_edges = dual_threshold(edges, high, low)
     
-    return canny_edges_image, strong_edges_image
+    return canny_edges
 
 
 def histeq():
+    """
+    Doc string.
+    """
     pass
 
 
 def histspec():
+    """
+    Doc string.
+    """
     pass
 
 
 # TODO: copy syntax of cv2
 def threshold():
+    """
+    Doc string.
+    """
     pass
