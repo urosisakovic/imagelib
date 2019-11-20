@@ -1,10 +1,16 @@
 import numpy as np
 from PIL import Image
 
-
+#TODO: From exception in case of an error.
 def imopen(img_path):
     """
-    Given filepath to an image, loads it as an numpy.ndarray of type float32.
+    Given filepath to an image, this function loads it as an numpy.ndarray
+    of type float32.
+
+    Args:
+        img_path(string): Filepath to an image.
+    Ret:
+        Image as an numpy.ndarray.
     """
     img = Image.open(img_path)
     img = np.array(img, dtype=np.float32)
@@ -14,26 +20,32 @@ def imopen(img_path):
 
     return img
 
+
 def imwrite(img_path, img):
     """
-    Given filepath and an image in numpy.ndarray format, this functions stores it.
+    Given filepath and an image in numpy.ndarray format,
+    this functions stores it.
 
-    img_path(string): Filepath to a desired location.
-    img(numpy.ndarray): RGB or grayscale image.
+    Args:
+        img_path(string): Filepath to a desired location.
+        img(numpy.ndarray): RGB or grayscale image.
     """
     img = ((img - img.min()) / (img.max() - img.min())) * 255.
     img = Image.fromarray(img.astype(np.uint8))
     img.save(img_path)
+
 
 # TODO: Extend this to cover RGBA.
 def rgb2gray(rgb, conv_ratio=None):
     """
     Converts rgb image to grayscale.
 
-    rgb(numpy.ndarray): RGB image with shape [<height>, <width>, 3].
-    conv_ration(numpy.ndarray): Denotes how much green, red or blue affect
-        intensity grayscale image. Shape [1, 3]. Form [red_contrib, green_contrib, blue_contrib].
-
+    Args:
+        rgb(numpy.ndarray): RGB image with shape [<height>, <width>, 3].
+        conv_ration(numpy.ndarray): Denotes how much green, red or blue affect
+            intensity grayscale image. Shape [1, 3]. Form [red_contrib, green_contrib, blue_contrib].
+    Ret:
+        Grayscale image as an numpy.ndarray of shape [<height>, <width>].
     """
     if len(rgb.shape) == 2:
         return rgb
@@ -43,14 +55,10 @@ def rgb2gray(rgb, conv_ratio=None):
 
     return np.dot(rgb, conv_ratio)
 
+
 def rgb2hsv():
     pass
 
+
 def hsv2rgb():
-    pass
-
-def is_rgb(img):
-    pass
-
-def is_rgba(img):
     pass

@@ -4,6 +4,7 @@ import numpy as np
 def imsharpen():
     pass
 
+
 def sobel_filter(type):
     assert type in ['ver', 'hor'], 'imagelib.sobel_filter: Invalid filter type'
     if type == 'ver':
@@ -22,8 +23,10 @@ def laplassian_filter():
                        [ 0, -1,  0]])
     return filter
 
+
 def mean_blur_filter(filt_shape):
     return np.ones(filt_shape) / np.prod(filt_shape)
+
 
 def imblur_mean(img, filt_shape):
     """
@@ -32,11 +35,14 @@ def imblur_mean(img, filt_shape):
     filt = mean_blur_filter(filt_shape)
     return filter2(img, filt)
 
+
 def imblur_gaussian():
     pass
 
+
 def imblur_median():
     pass
+
 
 def filter2(img, filt):
     """
@@ -67,6 +73,7 @@ def filter2(img, filt):
 
     return filtered_image
 
+
 def sobel_edge_det(img, blur_filt_shape):
     img = imblur_mean(img, blur_filt_shape)
 
@@ -81,6 +88,7 @@ def sobel_edge_det(img, blur_filt_shape):
     edges_dir = np.arctan(edges_hor / edges_ver)
 
     return edges_img, edges_dir
+
 
 def non_max_supression(edges, gradient):
     h, w = edges.shape
@@ -109,6 +117,7 @@ def non_max_supression(edges, gradient):
                 Z[i, j] = edges[i, j]
 
     return Z
+
 
 def dual_threshold(edges, high, low):
     edges[edges < low] = 0.
@@ -155,6 +164,7 @@ def dual_threshold(edges, high, low):
 
     return edges
 
+
 def canny_edge(img, blur_filt_shape, high, low):
     sobel_edges_image, sobel_edges_directions = sobel_edge_det(img, blur_filt_shape)
     strong_edges_image = non_max_supression(sobel_edges_image, sobel_edges_directions)
@@ -162,11 +172,14 @@ def canny_edge(img, blur_filt_shape, high, low):
     
     return canny_edges_image, strong_edges_image
 
+
 def histeq():
     pass
 
+
 def histspec():
     pass
+
 
 # TODO: copy syntax of cv2
 def threshold():

@@ -1,6 +1,18 @@
 import numpy as np
 
+
 def imresize(img, height, width, inter='nn'):
+    """
+    Function which resizes image.
+
+    Args:
+        image
+        height
+        width
+        inter
+    Ret:
+        Resized image.
+    """
     assert inter in ['nn', 'bilinear', 'bicubic'], 'Invalid interpolation'
 
     # extract old image dimensions
@@ -16,7 +28,19 @@ def imresize(img, height, width, inter='nn'):
 
     return imaffine(img, affine_transform, inter)
 
+
 def imrotate(img, angle, inter='nn', fill=0):
+    """
+    Rotates an image.
+
+    Args:
+        img:
+        angle:
+        inter:
+        fill:
+    Ret:
+        Rotated image.
+    """
     cos = np.cos(angle)
     sin = np.sin(angle)
 
@@ -27,7 +51,19 @@ def imrotate(img, angle, inter='nn', fill=0):
 
     return imaffine(img, affine_transform, inter, fill)
 
+
 def imaffine(img, transformation, inter='nn', fill=0):
+    """
+    Applies given affine transformation to the image.
+
+    Args:
+        img:
+        transformation:
+        inter:
+        fill:
+    Rets:
+        Result of the given affine transformation.
+    """
     assert transformation.shape == (2, 3), 'imagelib.imaffine: Invalid transformation matrix'
     assert inter in ['nn', 'bilinear', 'bicubic'], 'imagelib.imaffine: Invalid interpolation type'
 
@@ -131,5 +167,10 @@ def imaffine(img, transformation, inter='nn', fill=0):
 
     return new_img
 
+
 def fit_affine(a, b):
+    """
+    Given two sets of corresponding points, this function finds parameters
+    of an affine transformation which minimizes MSE.
+    """
     pass
