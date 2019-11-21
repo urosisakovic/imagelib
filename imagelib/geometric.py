@@ -140,7 +140,7 @@ def imaffine(img, transformation, inter='nn', fill=0):
     image_coord_sys_new_img_coords = np.transpose(image_coord_sys_new_img_coords)
 
     if inter == 'nn':
-        for idx, (proj_coord, coord) in enumerate(zip(projected_new_coords, image_coord_sys_new_img_coords)):
+        for (proj_coord, coord) in zip(projected_new_coords, image_coord_sys_new_img_coords):
 
             if proj_coord[0] < 0 or proj_coord[0] > img_h or\
                 proj_coord[1] < 0 or proj_coord[1] > img_w:

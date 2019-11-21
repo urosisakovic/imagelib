@@ -227,3 +227,62 @@ def threshold():
     Doc string.
     """
     pass
+
+
+def hough_transform(edge, h, w, t):
+    """
+    Performs Hough transform.
+
+    Args:
+        edge(numpy.ndarray): edge[x, y] = 1 if pixel [x, y] contains an edge,
+            otherwise it is 0.
+        h(int): Number of bins with respect to the distance of the line from
+            top left corner. 
+        w(int): Number of bins with respect to the angle of the normal from
+            top left corner onto the line.
+        t(int): Number of necessery votes in order to declare an existing line.
+    Ret:
+        List of tuples (rho, theta), one for every declared line.
+    """
+    
+    voting_grid = [[0 for _ in range(w)] for _ in range(h)]
+
+    d_theta = np.pi / w
+    d_rho = np.hypot(edge.shape[0], edge.shape[1]) / h
+
+    def vote(x, y):    
+        for i in range(w):
+            theta = d_theta * i
+            rho = np.cos(theta) * x + np.sin(theta) * y
+            j = int(rho / d_rho)
+
+            voting_grid[i][j] += 1
+
+    for x in range(edge.shape[0]):
+        for y in range(edge.shape[1]):
+            if edge[x, y]:
+                vote(x, y)
+
+    lines = []
+
+    for i in range(h):
+        for j in range(w):
+            if (voting_grid[i][j] >= t):
+                lines.append((i * d_theta, d_rho * j))
+
+    line_img = np.zeros(edge.shape, dtype=np.int32)
+    for (theta, rho) in lines:
+        for x in range(edge.shape[0]):
+            y = int((rho - np.cos(theta) * x) / np.sin(theta))
+            
+            if 0 <= y < edge.shape[1]:
+                line_img[x-1:x+1, y-1:y+1] = 1
+
+        for y in range(edge.shape[1]):
+            x = int((rho - np.sin(theta) * y) / np.cos(theta))
+            
+            if 0 <= x < edge.shape[0]:
+                line_img[x-1:x+1, y-1:y+1] = 1
+
+    return lines, line_img
+
