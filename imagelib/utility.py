@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-#TODO: From exception in case of an error.
+#TODO: form exception in case of an error.
 def imopen(img_path):
     """
     Given filepath to an image, this function loads it as an numpy.ndarray
@@ -56,9 +56,11 @@ def rgb2gray(rgb, conv_ratio=None):
     return np.dot(rgb, conv_ratio)
 
 
+#TODO
 def rgb2hsv():
     pass
 
 
+#TODO
 def hsv2rgb():
     pass

@@ -168,6 +168,7 @@ def imaffine(img, transformation, inter='nn', fill=0):
     return new_img
 
 
+# TODO
 def fit_affine(a, b):
     """
     Given two sets of corresponding points, this function finds parameters

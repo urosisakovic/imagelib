@@ -1,6 +1,6 @@
 import numpy as np
 
-
+#TODO
 def imsharpen():
     """
     Doc string.
@@ -9,9 +9,6 @@ def imsharpen():
 
 
 def sobel_filter(type):
-    """
-    Doc string.
-    """
     assert type in ['ver', 'hor'], 'imagelib.sobel_filter: Invalid filter type'
     if type == 'ver':
         return np.array([[-1, 0, 1],
@@ -24,9 +21,6 @@ def sobel_filter(type):
         
 
 def laplassian_filter():
-    """
-    Doc string.
-    """
     filter = np.array([[ 0, -1,  0],
                        [-1,  4, -1],
                        [ 0, -1,  0]])
@@ -34,9 +28,6 @@ def laplassian_filter():
 
 
 def mean_blur_filter(filt_shape):
-    """
-    Doc string.
-    """
     return np.ones(filt_shape) / np.prod(filt_shape)
 
 
@@ -48,17 +39,8 @@ def imblur_mean(img, filt_shape):
     return convolve(img, filt)
 
 
+# TODO
 def imblur_gaussian():
-    """
-    Doc string.
-    """
-    pass
-
-
-def imblur_median():
-    """
-    Doc string.
-    """
     pass
 
 
@@ -97,9 +79,6 @@ def convolve(img, filt):
 
 
 def sobel_edge_det(img, blur_filt_shape):
-    """
-    Doc string.
-    """
     img = imblur_mean(img, blur_filt_shape)
 
     filt_ver = sobel_filter('ver')
@@ -116,9 +95,6 @@ def sobel_edge_det(img, blur_filt_shape):
 
 
 def non_max_supression(edges, gradient):
-    """
-    Doc string.
-    """
     h, w = edges.shape
         
     Z = np.zeros(edges.shape)
@@ -148,9 +124,6 @@ def non_max_supression(edges, gradient):
 
 
 def dual_threshold(edges, high, low):
-    """
-    Doc string.
-    """
     edges[edges < low] = 0.
     edges[edges >= high] = high
 
@@ -198,7 +171,7 @@ def dual_threshold(edges, high, low):
 
 def canny_edge(img, blur_filt_shape, high, low):
     """
-    Doc string.
+    Canny edge detection algorithm implementation.
     """
     edges, edges_dir = sobel_edge_det(img, blur_filt_shape)
     edges = non_max_supression(edges, edges_dir)
@@ -207,24 +180,10 @@ def canny_edge(img, blur_filt_shape, high, low):
     return canny_edges
 
 
+# TODO
 def histeq():
     """
-    Doc string.
-    """
-    pass
-
-
-def histspec():
-    """
-    Doc string.
-    """
-    pass
-
-
-# TODO: copy syntax of cv2
-def threshold():
-    """
-    Doc string.
+    Histogram equalization.
     """
     pass
 
@@ -286,3 +245,7 @@ def hough_transform(edge, h, w, t):
 
     return lines, line_img
 
+
+#TODO:
+def circle_hough_transform(edge, h, w, t):
+    pass
