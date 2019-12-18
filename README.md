@@ -22,5 +22,5 @@ In progress. Written for practice.
 * Circle Hough transform
 * Sharpening of an image
 * Camera calibration
-* Ray Tracing
+* Ray tracing
 * etc.
