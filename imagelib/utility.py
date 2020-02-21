@@ -55,6 +55,17 @@ def rgb2gray(rgb, conv_ratio=None):
 
     return np.dot(rgb, conv_ratio)
 
+def scale(a, mn=0, mx=255):
+    min_a = a.min()
+    max_a = a.max()
+    range_a = max_a - min_a
+
+    goal_range = mx - mn
+
+    a = ((a - min_a) / range_a) * goal_range + mn
+
+    return a
+
 
 #TODO
 def rgb2hsv():
